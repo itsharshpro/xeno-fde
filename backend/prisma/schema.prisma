@@ -1,0 +1,124 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------
+// User & Tenant Models
+// ---------------------------
+
+// Users who log in to the dashboard
+model User {
+  id           String   @id @default(uuid())
+  name         String?
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId     String
+}
+
+// Tenant = company or client
+model Tenant {
+  id        String         @id @default(uuid())
+  name      String
+  users     User[]
+  stores    ShopifyStore[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+// ---------------------------
+// Shopify Models
+// ---------------------------
+
+model ShopifyStore {
+  id          String     @id @default(uuid())
+  tenant      Tenant     @relation(fields: [tenantId], references: [id])
+  tenantId    String
+  shopDomain  String     @unique
+  accessToken String
+  products    Product[]
+  orders      Order[]
+  customers   Customer[]
+  syncLogs    SyncLog[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Product {
+  id        String       @id @default(uuid())
+  store     ShopifyStore @relation(fields: [storeId], references: [id])
+  storeId   String
+  shopifyId String       @unique
+  title     String
+  price     Float
+  currency  String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  @@index([storeId])
+}
+
+model Customer {
+  id        String       @id @default(uuid())
+  store     ShopifyStore @relation(fields: [storeId], references: [id])
+  storeId   String
+  shopifyId String       @unique
+  email     String?
+  firstName String?
+  lastName  String?
+  orders    Order[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  @@index([storeId])
+}
+
+model Order {
+  id          String       @id @default(uuid())
+  store       ShopifyStore @relation(fields: [storeId], references: [id])
+  storeId     String
+  shopifyId   String       @unique
+  customer    Customer?    @relation(fields: [customerId], references: [id])
+  customerId  String?
+  totalAmount Float
+  currency    String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  @@index([storeId])
+}
+
+// ---------------------------
+// Sync Logs
+// ---------------------------
+
+model SyncLog {
+  id        String       @id @default(uuid())
+  store     ShopifyStore @relation(fields: [storeId], references: [id])
+  storeId   String
+  entity    SyncEntity   // <-- Reverted to enum
+  status    SyncStatus   // <-- Reverted to enum
+  message   String?
+  createdAt DateTime     @default(now())
+}
+
+// Enums for SyncLog (restored)
+enum SyncEntity {
+  PRODUCTS
+  CUSTOMERS
+  ORDERS
+}
+
+enum SyncStatus {
+  SUCCESS
+  FAILED
+  RUNNING
+}
