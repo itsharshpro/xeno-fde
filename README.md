@@ -6,6 +6,7 @@ Proxeno is a comprehensive, enterprise-grade SaaS platform that transforms Shopi
 
 * **Frontend Dashboard**: [proxeno.com](https://itsharshpro-xenofrontend.vercel.app)
 * **Backend API**: [backend.proxeno.com](https://itsharshpro-xenobackend.vercel.app/)
+* **Demo Video Link**: [video](https://youtu.be/LvBaR_dkHEs)
 
 ## ✨ Key Features
 
